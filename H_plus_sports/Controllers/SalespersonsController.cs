@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
+using H_plus_sports.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace H_plus_sports.Controllers
 {
@@ -7,39 +10,48 @@ namespace H_plus_sports.Controllers
     [Route("api/Salespersons")]
     public class SalespersonsController : Controller
     {
-        public SalespersonsController()
+        private readonly H_Plus_SportsContext _context;
+        public SalespersonsController(H_Plus_SportsContext context)
         {
-
+            _context = context;
         }
 
         [HttpGet]
         public IActionResult GetSalesperson()
         {
-            return Ok();
+            return new ObjectResult(_context.Salesperson);
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetSalesperson([FromRoute] int id)
+        [HttpGet("{id}", Name = "GetSalesperson")]
+        public async Task<IActionResult> GetSalesperson([FromRoute] int id)
         {
-            return Ok();
+            var salesperson = await _context.Salesperson.SingleOrDefaultAsync(c => c.SalespersonId == id);
+            return Ok(salesperson);
         }
 
         [HttpPost]
-        public IActionResult PostSalesperson([FromBody] Object obj)
+        public async Task<IActionResult> PostSalesperson([FromBody] Salesperson salesperson)
         {
-            return Ok();
+            _context.Salesperson.Add(salesperson);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetSalesperson", new { id = salesperson.SalespersonId }, salesperson);
         }
 
         [HttpPut("{id}")]
-        public IActionResult PutSalesperson([FromRoute] int id, [FromBody] Object obj)
+        public async Task<IActionResult> PutSalesperson([FromRoute] int id, [FromBody] Salesperson salesperson)
         {
-            return Ok();
+            _context.Entry(salesperson).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return Ok(salesperson);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteSalesperson([FromRoute] int id)
+        public async Task<IActionResult> DeleteSalesperson([FromRoute] int id)
         {
-            return Ok();
+            var salesperson = await _context.Salesperson.SingleOrDefaultAsync(c => c.SalespersonId == id);
+            _context.Salesperson.Remove(salesperson);
+            await _context.SaveChangesAsync();
+            return Ok(salesperson);
         }
     }
 }

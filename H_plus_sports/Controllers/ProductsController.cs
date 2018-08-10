@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
+using H_plus_sports.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace H_plus_sports.Controllers
 {
@@ -7,39 +10,48 @@ namespace H_plus_sports.Controllers
     [Route("api/Products")]
     public class ProductsController : Controller
     {
-        public ProductsController()
+        private readonly H_Plus_SportsContext _context;
+        public ProductsController(H_Plus_SportsContext context)
         {
-
+            _context = context;
         }
 
         [HttpGet]
         public IActionResult GetProduct()
         {
-            return Ok();
+            return new ObjectResult(_context.Product);
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetProduct([FromRoute] int id)
+        [HttpGet("{id}", Name= "GetProduct")]
+        public async Task<IActionResult> GetProduct([FromRoute] string id)
         {
-            return Ok();
+            var product = await _context.Product.SingleOrDefaultAsync(c => c.ProductId == id);
+            return Ok(product);
         }
 
         [HttpPost]
-        public IActionResult PostProduct([FromBody] Object obj)
+        public async Task<IActionResult> PostProduct([FromBody] Product product)
         {
-            return Ok();
+            _context.Product.Add(product);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetProduct", new { id = product.ProductId }, product);
         }
 
         [HttpPut("{id}")]
-        public IActionResult PutProduct([FromRoute] int id, [FromBody] Object obj)
+        public async Task<IActionResult> PutProduct([FromRoute] string id, [FromBody] Product product)
         {
-            return Ok();
+            _context.Entry(product).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return Ok(product);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteProduct([FromRoute] int id)
+        public async Task<IActionResult> DeleteProduct([FromRoute] string id)
         {
-            return Ok();
+            var product = await _context.Product.SingleOrDefaultAsync(c => c.ProductId == id);
+            _context.Product.Remove(product);
+            await _context.SaveChangesAsync();
+            return Ok(product);
         }
     }
 }
